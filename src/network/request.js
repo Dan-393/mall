@@ -2,7 +2,7 @@ import axios from 'axios'
 
 export function request(config){
   const instance = axios.create({
-    baseURL:"http://123.207.32.32:8000/api/m3",
+    baseURL:"http://123.207:8000/api/m3",
     timeout:5000
   })
   // axios的q请求拦截器
