@@ -22,7 +22,7 @@ export default {
     }
   },
   created(){
-    console.log(this.goodsItem)
+    // console.log(this.goodsItem)
   }
 
 }

@@ -1,17 +1,25 @@
 <template>
-  <div id='home'>
+  <div id='home' classs='wrapper'>
     <nav-bar class='home-nav'>
       <div slot='center'>购物街</div>
     </nav-bar>
-    <home-swiper :banners='banners'/>
-    <home-recommend-view :recommends='recommends'/>
-    <feature-view/>
-    <!-- 使用组件自带的点击事件 -->
-    <tab-controller
-                  :titles="['流行','新款','精选']"
-                  @tabClick='tabClick'/>
-    <!-- 商品列表，向组件传入商品数据 -->
-    <goods-list :goods="showGoods"/>
+    <scroll class='content' 
+    ref='scroll' 
+    :probeTypeNum=3
+    @getScrollPosition='getScrollPosition'
+    :isPullUpLoad='true'
+    @pullingUp='pullingUp'>
+      <home-swiper :banners='banners'/>
+      <home-recommend-view :recommends='recommends'/>
+      <feature-view/>
+      <!-- 使用组件自带的点击事件 -->
+      <tab-controller
+                    :titles="['流行','新款','精选']"
+                    @tabClick='tabClick'/>
+      <!-- 商品列表，向组件传入商品数据 -->
+      <goods-list :goods="showGoods"/>
+    </scroll>
+    <back-top @click.native="backClick" v-show="isShowBackTop"/>
   </div>
 </template>
 
@@ -24,6 +32,8 @@ import FeatureView from './childComps/FeatureView'
 import NavBar from '@/components/common/navbar/NavBar'
 import TabController from '@/components/content/tabController/TabController'
 import GoodsList from '@/components/content/goods/GoodsList'
+import scroll from '@/components/common/scroll/scroll'
+import BackTop from '@/components/content/backTop/BackTop'
 
 import {getHomeMultidata,getHomeGoods} from '@/network/home'
 export default {
@@ -35,13 +45,19 @@ export default {
 
     NavBar,
     TabController,
-    GoodsList
+    GoodsList,
+    scroll,
+    BackTop
 
   },
   computed:{
     // 传入子组件-商品的列表数据
     showGoods(){
       return this.goods[this.currentType].list
+    },
+    // backTop的显示跟隐藏
+    isShowBackTop(){
+      return (-this.scrollPosition.y) > 1000
     }
   },
   data(){
@@ -57,7 +73,8 @@ export default {
         'sell':{page:0,list:[]}
       },
       // 当前选中的类型
-      currentType:'pop'
+      currentType:'pop',
+      scrollPosition:{}
     }
   },
   // created，组件一旦创建好就调用函数
@@ -70,23 +87,37 @@ export default {
   },
   methods: {
 // 点击事件
-  tabClick(index){
-    switch(index){
-      case 0:
-        this.currentType = 'pop'
-        break
-      case 1:
-        this.currentType = 'new'
-        break
-      case 2:
-        this.currentType = 'sell'
-        break
-    }
-  },
+    tabClick(index){
+      switch(index){
+        case 0:
+          this.currentType = 'pop'
+          break
+        case 1:
+          this.currentType = 'new'
+          break
+        case 2:
+          this.currentType = 'sell'
+          break
+      }
+    },
+    backClick(){
+      this.$refs.scroll.scrollTo(0,0,500)
+    },
+
+  // 从子组件接受发生的事件
+    // 获得滚动的位置,默认携带position
+    getScrollPosition(position){
+      this.scrollPosition = position
+      // console.log(this.scrollPosition)
+    },
+    // 触发下拉加载事件
+    pullingUp(){
+      // 调用getHomeGoods方法请求数据
+      this.getHomeGoods(this.currentType)
+    },
 
 
 // 请求数据方法
-
     // 调用api接口方法请求多个数据
     getHomeMultidata(){
       getHomeMultidata().then(
@@ -125,8 +156,10 @@ export default {
 .home-nav {
   background-color:var(--color-tint);
   color: #fff;
+  position: fixed;
+  z-index: 9;
 }
-  .content {
+.content {
     /*高度决定 上44，下49*/
     
     /* 滚动区域设置 */
@@ -134,7 +167,6 @@ export default {
     /* height: calc(100% - 93px);
     overflow: hidden;
     margin-top: 44px; */
-
     overflow: hidden;
     position: absolute;
     top: 44px;
@@ -142,4 +174,6 @@ export default {
     right: 0;
     left: 0;
   }
+  
+  
 </style>
